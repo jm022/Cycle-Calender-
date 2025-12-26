@@ -1,140 +1,110 @@
-import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
 
-const PHASE_INFO = {
-  Menstrual: {
-    mood: "Low energy, inward",
-    supplements: ["Magnesium", "Warm teas"],
-    fluids: "Extra hydration, warm liquids",
-    rough: false
-  },
-  Follicular: {
-    mood: "Clear, motivated",
-    supplements: ["Vitex", "Milk Thistle"],
-    fluids: "Normal hydration",
-    rough: false
-  },
-  Ovulation: {
-    mood: "Confident, social",
-    supplements: ["Vitex", "Magnesium"],
-    fluids: "Hydrate well",
-    rough: false
-  },
-  Luteal: {
-    mood: "Sensitive, reflective",
-    supplements: ["Vitex", "Magnesium", "Lemon Balm"],
-    fluids: "Increase water + electrolytes",
-    rough: true
-  }
-};
+export default function CycleTracker() {
+const [startDate, setStartDate] = useState("");
+const [cycleLength, setCycleLength] = useState(28);
+const [moods, setMoods] = useState({});
 
-export default function PeriodCalendarApp() {
-  const [startDate, setStartDate] = useState("");
-  const [cycleLength, setCycleLength] = useState(28);
-  const [periodLength] = useState(5);
-  const [moods, setMoods] = useState({});
+const periodLength = 5;
 
-  function getPhase(day) {
-    if (day <= periodLength) return "Menstrual";
-    if (day <= 14) return "Follicular";
-    if (day <= 16) return "Ovulation";
-    return "Luteal";
-  }
+function getPhase(day) {
+if (day <= periodLength) return "Menstrual";
+if (day <= 14) return "Follicular";
+if (day <= 16) return "Ovulation";
+return "Luteal";
+}
 
-  function generateCycle() {
-    if (!startDate) return [];
-    const days = [];
-    const start = new Date(startDate);
-    for (let i = 0; i < cycleLength; i++) {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      const phase = getPhase(i + 1);
-      days.push({
-        date: d.toDateString(),
-        day: i + 1,
-        phase,
-        info: PHASE_INFO[phase]
-      });
-    }
-    return days;
-  }
+function getSupplements(phase) {
+if (phase === "Luteal") return "Vitex, Magnesium, Lemon Balm";
+if (phase === "Menstrual") return "Magnesium, Warm teas";
+if (phase === "Ovulation") return "Vitex, Magnesium";
+return "Vitex, Milk Thistle";
+}
 
-  const cycle = generateCycle();
+function getFluids(phase) {
+if (phase === "Luteal") return "Increase water + electrolytes";
+if (phase === "Menstrual") return "Warm fluids";
+return "Normal hydration";
+}
 
-  return (
-    <div className="min-h-screen bg-neutral-50 p-6 grid place-items-center">
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <Card className="w-[400px] rounded-2xl shadow-lg">
-          <CardContent className="p-6 space-y-4">
-            <h1 className="text-xl font-semibold">🌙 Hormone & Mood Calendar</h1>
-            <p className="text-sm text-neutral-600">Track moods, supplements & rough weeks</p>
+function generateDays() {
+if (!startDate) return [];
+const days = [];
+const start = new Date(startDate);
+for (let i = 0; i < cycleLength; i++) {
+const d = new Date(start);
+d.setDate(start.getDate() + i);
+const dayNum = i + 1;
+const phase = getPhase(dayNum);
+days.push({
+date: d.toDateString(),
+day: dayNum,
+phase
+});
+}
+return days;
+}
 
-            <label className="text-sm">First day of last period</label>
-            <input
-              type="date"
-              className="w-full rounded-lg border p-2"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+const days = generateDays();
 
-            <label className="text-sm">Cycle length (days)</label>
-            <input
-              type="number"
-              className="w-full rounded-lg border p-2"
-              value={cycleLength}
-              onChange={(e) => setCycleLength(Number(e.target.value))}
-            />
+return (
+<div style={{ fontFamily: "sans-serif", padding: 20, maxWidth: 420, margin: "0 auto" }}> <h2>🌙 Cycle & Mood Tracker</h2> <p>Simple hormone-aware daily tracking</p>
 
-            {cycle.length > 0 && (
-              <div className="space-y-3 max-h-[360px] overflow-y-auto">
-                {cycle.map((d) => (
-                  <div
-                    key={d.date}
-                    className={`rounded-xl p-3 shadow-sm ${d.info.rough ? "bg-rose-50" : "bg-white"}`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium">{d.date}</span>
-                      <span className="text-xs px-2 py-1 rounded-full bg-neutral-100">{d.phase}</span>
-                    </div>
+```
+  <label>First day of last period</label>
+  <input
+    type="date"
+    value={startDate}
+    onChange={(e) => setStartDate(e.target.value)}
+    style={{ width: "100%", padding: 8, marginBottom: 10 }}
+  />
 
-                    <p className="text-xs text-neutral-600 mt-1">Mood theme: {d.info.mood}</p>
-                    <p className="text-xs">Supplements: {d.info.supplements.join(", ")}</p>
-                    <p className="text-xs">Fluids: {d.info.fluids}</p>
+  <label>Cycle length (days)</label>
+  <input
+    type="number"
+    value={cycleLength}
+    onChange={(e) => setCycleLength(Number(e.target.value))}
+    style={{ width: "100%", padding: 8, marginBottom: 20 }}
+  />
 
-                    <div className="mt-2">
-                      <label className="text-xs">Your mood today</label>
-                      <select
-                        className="w-full text-xs rounded border p-1"
-                        value={moods[d.date] || ""}
-                        onChange={(e) =>
-                          setMoods({ ...moods, [d.date]: e.target.value })
-                        }
-                      >
-                        <option value="">Select</option>
-                        <option value="😊 Calm">😊 Calm</option>
-                        <option value="😐 Neutral">😐 Neutral</option>
-                        <option value="😠 Irritable">😠 Irritable</option>
-                        <option value="😟 Anxious">😟 Anxious</option>
-                        <option value="😢 Low">😢 Low</option>
-                      </select>
-                    </div>
+  {days.map((d) => (
+    <div
+      key={d.date}
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: 10,
+        padding: 10,
+        marginBottom: 10,
+        background: d.phase === "Luteal" ? "#fdecef" : "#fff"
+      }}
+    >
+      <strong>{d.date}</strong>
+      <div>Day {d.day} • {d.phase}</div>
+      <div>Supplements: {getSupplements(d.phase)}</div>
+      <div>Fluids: {getFluids(d.phase)}</div>
 
-                    {d.info.rough && (
-                      <p className="mt-2 text-xs font-medium text-rose-600">
-                        ⚠ Predicted sensitive day – be gentle
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+      <select
+        value={moods[d.date] || ""}
+        onChange={(e) => setMoods({ ...moods, [d.date]: e.target.value })}
+        style={{ width: "100%", marginTop: 6 }}
+      >
+        <option value="">Mood today</option>
+        <option value="Calm">😊 Calm</option>
+        <option value="Neutral">😐 Neutral</option>
+        <option value="Irritable">😠 Irritable</option>
+        <option value="Anxious">😟 Anxious</option>
+        <option value="Low">😢 Low</option>
+      </select>
 
-            <Button className="w-full rounded-xl">Save & Review Patterns</Button>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {d.phase === "Luteal" && (
+        <div style={{ color: "#b00020", marginTop: 4 }}>
+          ⚠ Predicted sensitive day – be gentle
+        </div>
+      )}
     </div>
-  );
+  ))}
+</div>
+```
+
+);
 }
