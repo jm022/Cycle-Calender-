@@ -1,0 +1,140 @@
+import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+
+const PHASE_INFO = {
+  Menstrual: {
+    mood: "Low energy, inward",
+    supplements: ["Magnesium", "Warm teas"],
+    fluids: "Extra hydration, warm liquids",
+    rough: false
+  },
+  Follicular: {
+    mood: "Clear, motivated",
+    supplements: ["Vitex", "Milk Thistle"],
+    fluids: "Normal hydration",
+    rough: false
+  },
+  Ovulation: {
+    mood: "Confident, social",
+    supplements: ["Vitex", "Magnesium"],
+    fluids: "Hydrate well",
+    rough: false
+  },
+  Luteal: {
+    mood: "Sensitive, reflective",
+    supplements: ["Vitex", "Magnesium", "Lemon Balm"],
+    fluids: "Increase water + electrolytes",
+    rough: true
+  }
+};
+
+export default function PeriodCalendarApp() {
+  const [startDate, setStartDate] = useState("");
+  const [cycleLength, setCycleLength] = useState(28);
+  const [periodLength] = useState(5);
+  const [moods, setMoods] = useState({});
+
+  function getPhase(day) {
+    if (day <= periodLength) return "Menstrual";
+    if (day <= 14) return "Follicular";
+    if (day <= 16) return "Ovulation";
+    return "Luteal";
+  }
+
+  function generateCycle() {
+    if (!startDate) return [];
+    const days = [];
+    const start = new Date(startDate);
+    for (let i = 0; i < cycleLength; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const phase = getPhase(i + 1);
+      days.push({
+        date: d.toDateString(),
+        day: i + 1,
+        phase,
+        info: PHASE_INFO[phase]
+      });
+    }
+    return days;
+  }
+
+  const cycle = generateCycle();
+
+  return (
+    <div className="min-h-screen bg-neutral-50 p-6 grid place-items-center">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+        <Card className="w-[400px] rounded-2xl shadow-lg">
+          <CardContent className="p-6 space-y-4">
+            <h1 className="text-xl font-semibold">🌙 Hormone & Mood Calendar</h1>
+            <p className="text-sm text-neutral-600">Track moods, supplements & rough weeks</p>
+
+            <label className="text-sm">First day of last period</label>
+            <input
+              type="date"
+              className="w-full rounded-lg border p-2"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+
+            <label className="text-sm">Cycle length (days)</label>
+            <input
+              type="number"
+              className="w-full rounded-lg border p-2"
+              value={cycleLength}
+              onChange={(e) => setCycleLength(Number(e.target.value))}
+            />
+
+            {cycle.length > 0 && (
+              <div className="space-y-3 max-h-[360px] overflow-y-auto">
+                {cycle.map((d) => (
+                  <div
+                    key={d.date}
+                    className={`rounded-xl p-3 shadow-sm ${d.info.rough ? "bg-rose-50" : "bg-white"}`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium">{d.date}</span>
+                      <span className="text-xs px-2 py-1 rounded-full bg-neutral-100">{d.phase}</span>
+                    </div>
+
+                    <p className="text-xs text-neutral-600 mt-1">Mood theme: {d.info.mood}</p>
+                    <p className="text-xs">Supplements: {d.info.supplements.join(", ")}</p>
+                    <p className="text-xs">Fluids: {d.info.fluids}</p>
+
+                    <div className="mt-2">
+                      <label className="text-xs">Your mood today</label>
+                      <select
+                        className="w-full text-xs rounded border p-1"
+                        value={moods[d.date] || ""}
+                        onChange={(e) =>
+                          setMoods({ ...moods, [d.date]: e.target.value })
+                        }
+                      >
+                        <option value="">Select</option>
+                        <option value="😊 Calm">😊 Calm</option>
+                        <option value="😐 Neutral">😐 Neutral</option>
+                        <option value="😠 Irritable">😠 Irritable</option>
+                        <option value="😟 Anxious">😟 Anxious</option>
+                        <option value="😢 Low">😢 Low</option>
+                      </select>
+                    </div>
+
+                    {d.info.rough && (
+                      <p className="mt-2 text-xs font-medium text-rose-600">
+                        ⚠ Predicted sensitive day – be gentle
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Button className="w-full rounded-xl">Save & Review Patterns</Button>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  );
+}
